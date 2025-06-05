@@ -1,35 +1,25 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
 function App() {
-  const [count, setCount] = useState(0)
-
+  // Renders
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+      <header>
+        <h1>Movies live search</h1>
+      </header>
+
+      <main>
         <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+          Movies Live Search é uma aplicação que permite buscar filmes em tempo
+          real, exibindo resultados instantâneos enquanto o usuário digita. O
+          projeto utiliza React, TypeScript e APIs públicas de filmes para
+          oferecer uma experiência rápida e intuitiva.
         </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      </main>
+
+      <footer>
+        <p>&copy; 2025 Soares Dev LTDA.</p>
+      </footer>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
