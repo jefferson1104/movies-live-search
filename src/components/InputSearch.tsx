@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { LuLoaderCircle } from "react-icons/lu";
 
+import { useFavorites } from "../contexts/favoritesContext";
+
 import { useGetGenres } from "../hooks/useGetGenres";
 
 import type { IMovie } from "../interfaces/movie";
@@ -34,6 +36,7 @@ export function InputSearch({
   onLoadMoreResults,
 }: IInputSearchProps) {
   // Hooks
+  const { toggleFavorite } = useFavorites();
   const { genres } = useGetGenres();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -90,6 +93,11 @@ export function InputSearch({
         const link = suggestionLinks[activeIndex];
         window.open(link.href(searchValue), "_blank");
       }
+    }
+
+    if (e.key === " " && activeIndex !== null) {
+      e.preventDefault();
+      toggleFavorite(searchResults[activeIndex]);
     }
   };
 

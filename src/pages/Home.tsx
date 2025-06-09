@@ -7,6 +7,7 @@ import { EMediaType } from "../enums/media-type";
 import type { IApiResponse } from "../interfaces/commons";
 
 import { InputSearch } from "../components/InputSearch";
+import { Favorites } from "../components/Favorites";
 
 export function Home() {
   // States
@@ -120,8 +121,9 @@ export function Home() {
         <h1 className="text-2xl font-bold">Movies Live Search</h1>
       </header>
 
-      <main className="flex flex-col flex-grow items-center">
-        <div className="mt-16 mb-8 w-[480px]">
+      <main className="flex flex-col flex-grow items-center px-2 md:px-4">
+        {/* live search */}
+        <div className="mt-16 mb-8 w-[320px] md:w-[480px]">
           <InputSearch
             isLoading={isLoading}
             value={query}
@@ -134,13 +136,9 @@ export function Home() {
           />
         </div>
 
-        <div className="max-w-xl">
-          <p className="text-lg text-center">
-            Movies Live Search é uma aplicação que permite buscar filmes em
-            tempo real, exibindo resultados instantâneos enquanto o usuário
-            digita. O projeto utiliza React, TypeScript e APIs públicas de
-            filmes para oferecer uma experiência rápida e intuitiva.
-          </p>
+        {/* favorites */}
+        <div className="w-full mb-8">
+          <Favorites />
         </div>
       </main>
 

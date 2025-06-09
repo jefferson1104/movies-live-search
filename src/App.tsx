@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { FavoritesProvider } from "./contexts/favoritesContext";
+
 import { Home } from "./pages/Home";
 
 function App() {
@@ -8,7 +10,9 @@ function App() {
   // Renders
   return (
     <QueryClientProvider client={queryClient}>
-      <Home />
+      <FavoritesProvider>
+        <Home />
+      </FavoritesProvider>
     </QueryClientProvider>
   );
 }

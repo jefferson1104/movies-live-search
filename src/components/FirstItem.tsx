@@ -1,12 +1,16 @@
 import type { Ref } from "react";
-
-import { EMediaType } from "../enums/media-type";
+import { FaRegStar } from "react-icons/fa";
+import { FaStar } from "react-icons/fa";
 
 import type { ITvshow } from "../interfaces/tvshow";
 import type { IMovie } from "../interfaces/movie";
 import type { IGenre } from "../interfaces/commons";
 
+import { useFavorites } from "../contexts/favoritesContext";
+
 import { handleOpenItem } from "../utils/open-item";
+import { getItemTitle } from "../utils/get-item-title";
+import { getItemYear } from "../utils/get-item-year";
 
 interface IFirstItemProps {
   ref: Ref<HTMLLIElement>;
@@ -16,17 +20,17 @@ interface IFirstItemProps {
 }
 
 export function FirstItem({ ref, item, genres, isActive }: IFirstItemProps) {
+  // Hooks
+  const { toggleFavorite, isFavorited } = useFavorites();
+
   // Constants
+  const favorited = isFavorited(item);
   const baseImageUrl = "https://image.tmdb.org/t/p/w500/";
-  const itemDate =
-    item.media_type === EMediaType.TV
-      ? (item as ITvshow).first_air_date
-      : (item as IMovie).release_date;
-  const year = new Date(itemDate).getFullYear();
-  const title =
-    item.media_type === EMediaType.TV
-      ? (item as ITvshow).name
-      : (item as IMovie).title;
+  const title = getItemTitle(item);
+  const year = getItemYear(item);
+  const isSmallScreen = window.innerWidth < 768;
+  const truncatedTitle =
+    isSmallScreen && title.length > 35 ? title.slice(0, 35) + "..." : title;
 
   // Methods
   const getGenreName = (genreId: number, genreList: IGenre[]) => {
@@ -42,7 +46,6 @@ export function FirstItem({ ref, item, genres, isActive }: IFirstItemProps) {
     <li
       className="p-1 cursor-pointer"
       ref={ref}
-      onClick={() => handleOpenItem(item)}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           handleOpenItem(item);
@@ -50,37 +53,57 @@ export function FirstItem({ ref, item, genres, isActive }: IFirstItemProps) {
       }}
     >
       <div
-        className={`flex items-start p-2 rounded-md bg-blue-100 ${
+        className={`flex items-start justify-between w-full p-2 rounded-md bg-blue-100 ${
           isActive ? "bg-blue-200" : "hover:bg-blue-200"
         }`}
       >
-        <img
-          src={`${baseImageUrl}${item.poster_path}`}
-          alt={title}
-          className="w-14 h-20 object-cover rounded-md mr-2"
-        />
+        <div className="flex items-start justify-between w-full">
+          <div
+            className="flex items-start"
+            onClick={() => handleOpenItem(item)}
+          >
+            <img
+              src={`${baseImageUrl}${item.poster_path}`}
+              alt={title}
+              className="w-14 h-20 object-cover rounded-md mr-2"
+            />
 
-        <div className="flex flex-col gap-2">
-          <p className="font-semibold text-blue-500 text-sm">
-            {title} <span className="font-normal text-gray-400">({year})</span>
-          </p>
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold text-blue-500 text-sm">
+                {truncatedTitle}{" "}
+                <span className="font-normal text-gray-400">({year})</span>
+              </p>
 
-          <div className="flex gap-2">
-            {item.genre_ids.map((genre) => {
-              const genreName = getGenreName(Number(genre), genres);
+              <div className="hidden md:flex gap-2  ">
+                {item.genre_ids.map((genre) => {
+                  const genreName = getGenreName(Number(genre), genres);
 
-              return (
-                <div
-                  key={String(genre)}
-                  className="w-fit px-2 rounded-2xl bg-gray-200 border border-gray-300"
-                >
-                  <p className="font-medium text-center text-xs text-gray-800">
-                    {genreName}
-                  </p>
-                </div>
-              );
-            })}
+                  return (
+                    <div
+                      key={String(genre)}
+                      className="w-fit px-2 rounded-2xl bg-gray-200 border border-gray-300"
+                    >
+                      <p className="font-medium text-center text-xs text-gray-800">
+                        {genreName}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
+
+          {favorited ? (
+            <FaStar
+              onClick={() => toggleFavorite(item)}
+              className="size-6 text-amber-400 hover:text-gray-400 transition-all duration-300"
+            />
+          ) : (
+            <FaRegStar
+              onClick={() => toggleFavorite(item)}
+              className="size-6 text-gray-400 hover:text-amber-400 transition-all duration-300"
+            />
+          )}
         </div>
       </div>
     </li>
