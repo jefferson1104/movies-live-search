@@ -4,6 +4,9 @@ import { LuLoaderCircle } from "react-icons/lu";
 
 import type { IMovie } from "../interfaces/movie";
 
+import { FirstItem } from "./FirstItem";
+import { Item } from "./Item";
+
 interface IInputSearchProps {
   isLoading?: boolean;
   value?: string;
@@ -12,7 +15,7 @@ interface IInputSearchProps {
   onSearchChange: (value: string) => void;
 }
 
-export function MovieInputSearch({
+export function InputSearch({
   isLoading = false,
   value = "",
   searchValue = "",
@@ -27,6 +30,10 @@ export function MovieInputSearch({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   // Methods
+  const handleOpenItem = (item: IMovie) => {
+    window.open(`https://www.themoviedb.org/movie/${item.id}`, "_blank");
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (searchResults?.length === 0) return;
 
@@ -50,9 +57,7 @@ export function MovieInputSearch({
 
     if (e.key === "Enter" && activeIndex !== null) {
       e.preventDefault();
-      // setSearch(filteredResults[activeIndex]);
-      // setFilteredResults([]);
-      setActiveIndex(null);
+      handleOpenItem(searchResults[activeIndex]);
     }
   };
 
@@ -89,7 +94,8 @@ export function MovieInputSearch({
       </div>
 
       {searchValue && (
-        <ul className="group mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+        <ul className="group mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+          {/* Empty State */}
           {searchResults?.length === 0 && (
             <div className="flex items-center justify-center h-14">
               <p className="text-center text-gray-400">
@@ -98,27 +104,30 @@ export function MovieInputSearch({
             </div>
           )}
 
-          {searchResults?.map((item, index) => (
-            <li
-              className={`px-4 py-2 cursor-pointer ${
-                activeIndex === index ? "bg-gray-200" : "hover:bg-gray-100"
-              }`}
-              key={index}
-              ref={(el) => {
-                itemRefs.current[index] = el ?? undefined;
-              }}
-              onClick={() => console.log("SELECTED MOVIE", item)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onSearchChange(item.title);
-                  setActiveIndex(null);
-                  console.log("Selected item:", item);
-                }
-              }}
-            >
-              {item.title}
-            </li>
-          ))}
+          {/* Search Results */}
+          {searchResults?.map((item, index) => {
+            const isFirstItem = index === 0;
+
+            return isFirstItem ? (
+              <FirstItem
+                key={item.id}
+                item={item}
+                isActive={activeIndex === index}
+                ref={(el) => {
+                  itemRefs.current[index] = el ?? undefined;
+                }}
+              />
+            ) : (
+              <Item
+                key={item.id}
+                item={item}
+                isActive={activeIndex === index}
+                ref={(el) => {
+                  itemRefs.current[index] = el ?? undefined;
+                }}
+              />
+            );
+          })}
         </ul>
       )}
     </div>

@@ -18,3 +18,8 @@ export interface IMovie {
   vote_average: number;
   vote_count: number;
 }
+
+export interface IMovieGenre {
+  id: number;
+  name: string;
+}
