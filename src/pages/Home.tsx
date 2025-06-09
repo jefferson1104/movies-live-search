@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 import api from "../server/api";
 
-import type { IMovieApiResponse } from "../interfaces/movie";
+import { EMediaType } from "../enums/media-type";
+
+import type { IApiResponse } from "../interfaces/commons";
 
 import { InputSearch } from "../components/InputSearch";
 
@@ -12,9 +14,7 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [movies, setMovies] = useState<IMovieApiResponse>();
-
-  console.log("PAGE: ", page);
+  const [items, setItems] = useState<IApiResponse>();
 
   // Constants
   const debounceTimeoutRef = useRef<number | undefined>(undefined);
@@ -38,14 +38,20 @@ export function Home() {
 
       const normalizedQuery = debouncedQuery.toLowerCase();
 
-      const response = await api.get("/search/movie", {
+      const response = await api.get("/search/multi", {
         params: {
           query: normalizedQuery,
         },
       });
 
       if (response.data) {
-        setMovies(response.data);
+        const filteredResults = response.data.results.filter(
+          (item: { media_type: EMediaType }) =>
+            item.media_type === EMediaType.MOVIE ||
+            item.media_type === EMediaType.TV
+        );
+
+        setItems({ ...response.data, results: filteredResults });
       }
     } catch (error) {
       console.error("fetchMovies() error: ", error);
@@ -55,26 +61,33 @@ export function Home() {
   };
 
   const fetchNextPage = async () => {
-    if (!movies || page >= movies.total_pages) return;
+    if (!items || page >= items.total_pages) return;
 
     try {
       setIsLoading(true);
 
       const normalizedQuery = debouncedQuery.toLowerCase();
 
-      const response = await api.get("/search/movie", {
+      const response = await api.get("/search/multi", {
         params: {
           query: normalizedQuery,
-          page: page + 1, // Carrega a próxima página
+          page: page + 1,
         },
       });
 
       if (response.data) {
-        setMovies((prevMovies) => ({
+        const filteredResults = response.data.results.filter(
+          (item: { media_type: EMediaType }) =>
+            item.media_type === EMediaType.MOVIE ||
+            item.media_type === EMediaType.TV
+        );
+
+        setItems((prevItems) => ({
           ...response.data,
-          results: [...(prevMovies?.results ?? []), ...response.data.results], // Adiciona os novos resultados à lista existente
+          results: [...(prevItems?.results ?? []), ...filteredResults],
         }));
-        setPage(page + 1); // Atualiza o número da página
+
+        setPage(page + 1);
       }
     } catch (error) {
       console.error("fetchNextPage() error: ", error);
@@ -88,12 +101,12 @@ export function Home() {
     setPage(1);
 
     if (!debouncedQuery) {
-      setMovies(undefined);
+      setItems(undefined);
       return;
     }
 
     if (debouncedQuery.length < 3) {
-      setMovies(undefined);
+      setItems(undefined);
       return;
     }
 
@@ -113,9 +126,9 @@ export function Home() {
             isLoading={isLoading}
             value={query}
             searchValue={debouncedQuery}
-            searchResults={movies?.results}
+            searchResults={items?.results}
             currentPage={page}
-            totalPages={movies?.total_pages ?? 0}
+            totalPages={items?.total_pages ?? 0}
             onSearchChange={handleChange}
             onLoadMoreResults={fetchNextPage}
           />

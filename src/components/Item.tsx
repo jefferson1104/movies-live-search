@@ -1,17 +1,24 @@
 import type { Ref } from "react";
+
+import { EMediaType } from "../enums/media-type";
+
 import type { IMovie } from "../interfaces/movie";
+import type { ITvshow } from "../interfaces/tvshow";
+
+import { handleOpenItem } from "../utils/open-item";
 
 interface IItemProps {
   ref: Ref<HTMLLIElement>;
-  item: IMovie;
+  item: IMovie | ITvshow;
   isActive?: boolean;
 }
 
 export function Item({ ref, item, isActive }: IItemProps) {
-  // Methods
-  const handleOpenItem = (item: IMovie) => {
-    window.open(`https://www.themoviedb.org/movie/${item.id}`, "_blank");
-  };
+  // Constants
+  const title =
+    item.media_type === EMediaType.TV
+      ? (item as ITvshow).name
+      : (item as IMovie).title;
 
   // Renders
   return (
@@ -30,7 +37,7 @@ export function Item({ ref, item, isActive }: IItemProps) {
           isActive ? "bg-gray-200" : "hover:bg-gray-100"
         }`}
       >
-        {item.title}
+        {title}
       </div>
     </li>
   );

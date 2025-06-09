@@ -2,13 +2,26 @@ import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 
 import api from "../server/api";
 
-import type { IMovieGenre } from "../interfaces/movie";
+import type { IGenre } from "../interfaces/commons";
 
 export const useGetGenres = () => {
   // Methods
-  const fetchData = async (): Promise<IMovieGenre[]> => {
-    const { data } = await api.get("/genre/movie/list?language=pt-BR");
-    return data.genres;
+  const fetchData = async (): Promise<IGenre[]> => {
+    const [movieGenresResponse, tvGenresResponse] = await Promise.all([
+      api.get("/genre/movie/list?language=pt-BR"),
+      api.get("/genre/tv/list?language=pt-BR"),
+    ]);
+
+    const movieGenres: IGenre[] = movieGenresResponse.data.genres;
+    const tvGenres: IGenre[] = tvGenresResponse.data.genres;
+
+    const allGenres = [...movieGenres, ...tvGenres];
+
+    const uniqueGenres = Array.from(
+      new Map(allGenres.map((genre) => [genre.id, genre])).values()
+    );
+
+    return uniqueGenres;
   };
 
   // Utils
@@ -19,7 +32,7 @@ export const useGetGenres = () => {
 
   // Returns
   return {
-    genres: (data as IMovieGenre[]) ?? [],
+    genres: (data as IGenre[]) ?? [],
     genresError: error,
     genresIsFetching: isFetching,
     genresIsPending: isPending,

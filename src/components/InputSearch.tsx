@@ -5,6 +5,9 @@ import { LuLoaderCircle } from "react-icons/lu";
 import { useGetGenres } from "../hooks/useGetGenres";
 
 import type { IMovie } from "../interfaces/movie";
+import type { ITvshow } from "../interfaces/tvshow";
+
+import { handleOpenItem } from "../utils/open-item";
 
 import { FirstItem } from "./FirstItem";
 import { Item } from "./Item";
@@ -13,7 +16,7 @@ interface IInputSearchProps {
   isLoading?: boolean;
   value?: string;
   searchValue?: string;
-  searchResults?: IMovie[];
+  searchResults?: IMovie[] | ITvshow[];
   currentPage: number;
   totalPages: number;
   onSearchChange: (value: string) => void;
@@ -41,35 +44,52 @@ export function InputSearch({
   // States
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
+  // Constants
+  const suggestionLinks = [
+    {
+      label: (term: string) => `Buscar "${term}" no IMDB`,
+      href: (term: string) =>
+        `https://www.imdb.com/find?q=${encodeURIComponent(term)}`,
+    },
+    {
+      label: (term: string) => `Buscar "${term}" no Google`,
+      href: (term: string) =>
+        `https://www.google.com/search?q=${encodeURIComponent(term)}`,
+    },
+  ];
+  const totalItems =
+    searchResults?.length > 0 ? searchResults.length : suggestionLinks.length;
+
   // Methods
-  const handleOpenItem = (item: IMovie) => {
-    window.open(`https://www.themoviedb.org/movie/${item.id}`, "_blank");
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (searchResults?.length === 0) return;
+    if (totalItems === 0) return;
 
-    if (e.key === "ArrowDown" && searchResults) {
+    if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((prev) => {
         const nextIndex =
-          prev === null ? 0 : Math.min(prev + 1, searchResults.length - 1);
+          prev === null ? 0 : Math.min(prev + 1, totalItems - 1);
         return nextIndex;
       });
     }
 
-    if (e.key === "ArrowUp" && searchResults) {
+    if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((prev) => {
         const nextIndex =
-          prev === null ? searchResults.length - 1 : Math.max(prev - 1, 0);
+          prev === null ? totalItems - 1 : Math.max(prev - 1, 0);
         return nextIndex;
       });
     }
 
     if (e.key === "Enter" && activeIndex !== null) {
       e.preventDefault();
-      handleOpenItem(searchResults[activeIndex]);
+      if (searchResults?.length > 0) {
+        handleOpenItem(searchResults[activeIndex]);
+      } else {
+        const link = suggestionLinks[activeIndex];
+        window.open(link.href(searchValue), "_blank");
+      }
     }
   };
 
@@ -83,6 +103,10 @@ export function InputSearch({
       });
     }
   }, [activeIndex]);
+
+  useEffect(() => {
+    setActiveIndex(null);
+  }, [searchValue]);
 
   useEffect(() => {
     const listEl = listRef.current;
@@ -146,11 +170,42 @@ export function InputSearch({
           ref={listRef}
         >
           {/* Empty State */}
-          {searchResults?.length === 0 && (
-            <div className="flex items-center justify-center h-14">
-              <p className="text-center text-gray-400">
-                Nenhum resultado encontrado para "{searchValue}"
+          {searchResults?.length === 0 && searchValue && (
+            <div className="p-2">
+              <p className="text-gray-500 text-sm mb-2">
+                Nenhum resultado encontrado para{" "}
+                <strong>"{searchValue}"</strong>.
               </p>
+
+              {suggestionLinks.map((link, index) => {
+                const isActive = activeIndex === index;
+
+                return (
+                  <li
+                    key={index}
+                    className="p-1 cursor-pointer"
+                    ref={(el) => {
+                      itemRefs.current[index] = el ?? undefined;
+                    }}
+                    onClick={() =>
+                      window.open(link.href(searchValue), "_blank")
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        window.open(link.href(searchValue), "_blank");
+                      }
+                    }}
+                  >
+                    <div
+                      className={`flex items-center py-1 px-2 rounded-md ${
+                        isActive ? "bg-gray-200" : "hover:bg-gray-100"
+                      }`}
+                    >
+                      {link.label(searchValue)}
+                    </div>
+                  </li>
+                );
+              })}
             </div>
           )}
 

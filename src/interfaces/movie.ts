@@ -1,11 +1,11 @@
-interface IMovieGenreId {
-  [key: number]: number;
-}
+import type { EMediaType } from "../enums/media-type";
+
+import type { IGenreId } from "./commons";
 
 export interface IMovie {
   adult: boolean;
   backdrop_path: string;
-  genre_ids: IMovieGenreId[];
+  genre_ids: IGenreId[];
   id: number;
   original_language: string;
   original_title: string;
@@ -17,16 +17,5 @@ export interface IMovie {
   video: boolean;
   vote_average: number;
   vote_count: number;
-}
-
-export interface IMovieApiResponse {
-  page: number;
-  results: IMovie[];
-  total_pages: number;
-  total_results: number;
-}
-
-export interface IMovieGenre {
-  id: number;
-  name: string;
+  media_type: EMediaType;
 }
