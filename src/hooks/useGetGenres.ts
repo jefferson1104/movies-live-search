@@ -11,14 +11,6 @@ export const useGetGenres = () => {
     return data.genres;
   };
 
-  const getGenreName = (genreId: number, genreList: IMovieGenre[]) => {
-    if (!genreList || genreList.length === 0) return "";
-
-    const genre = genreList.find((g) => g.id === Number(genreId));
-
-    return genre ? genre.name : "";
-  };
-
   // Utils
   const { error, data, isFetching, isPending } = useQuery({
     queryKey: ["fetchGenres"],
@@ -31,6 +23,5 @@ export const useGetGenres = () => {
     genresError: error,
     genresIsFetching: isFetching,
     genresIsPending: isPending,
-    getGenreName,
   };
 };

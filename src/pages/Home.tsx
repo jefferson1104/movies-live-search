@@ -2,14 +2,19 @@ import { useEffect, useRef, useState } from "react";
 
 import api from "../server/api";
 
+import type { IMovieApiResponse } from "../interfaces/movie";
+
 import { InputSearch } from "../components/InputSearch";
 
 export function Home() {
   // States
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [results, setResults] = useState([]);
+  const [movies, setMovies] = useState<IMovieApiResponse>();
+
+  console.log("PAGE: ", page);
 
   // Constants
   const debounceTimeoutRef = useRef<number | undefined>(undefined);
@@ -39,7 +44,9 @@ export function Home() {
         },
       });
 
-      setResults(response.data.results);
+      if (response.data) {
+        setMovies(response.data);
+      }
     } catch (error) {
       console.error("fetchMovies() error: ", error);
     } finally {
@@ -47,14 +54,46 @@ export function Home() {
     }
   };
 
+  const fetchNextPage = async () => {
+    if (!movies || page >= movies.total_pages) return;
+
+    try {
+      setIsLoading(true);
+
+      const normalizedQuery = debouncedQuery.toLowerCase();
+
+      const response = await api.get("/search/movie", {
+        params: {
+          query: normalizedQuery,
+          page: page + 1, // Carrega a próxima página
+        },
+      });
+
+      if (response.data) {
+        setMovies((prevMovies) => ({
+          ...response.data,
+          results: [...(prevMovies?.results ?? []), ...response.data.results], // Adiciona os novos resultados à lista existente
+        }));
+        setPage(page + 1); // Atualiza o número da página
+      }
+    } catch (error) {
+      console.error("fetchNextPage() error: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Effects
   useEffect(() => {
+    setPage(1);
+
     if (!debouncedQuery) {
-      setResults([]);
+      setMovies(undefined);
       return;
     }
 
     if (debouncedQuery.length < 3) {
-      setResults([]);
+      setMovies(undefined);
       return;
     }
 
@@ -74,8 +113,11 @@ export function Home() {
             isLoading={isLoading}
             value={query}
             searchValue={debouncedQuery}
-            searchResults={results}
+            searchResults={movies?.results}
+            currentPage={page}
+            totalPages={movies?.total_pages ?? 0}
             onSearchChange={handleChange}
+            onLoadMoreResults={fetchNextPage}
           />
         </div>
 

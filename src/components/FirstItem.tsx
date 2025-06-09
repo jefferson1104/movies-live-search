@@ -1,19 +1,15 @@
 import type { Ref } from "react";
 
-import { useGetGenres } from "../hooks/useGetGenres";
-
-import type { IMovie } from "../interfaces/movie";
+import type { IMovie, IMovieGenre } from "../interfaces/movie";
 
 interface IFirstItemProps {
   ref: Ref<HTMLLIElement>;
   item: IMovie;
+  genres: IMovieGenre[];
   isActive?: boolean;
 }
 
-export function FirstItem({ ref, item, isActive }: IFirstItemProps) {
-  // Hooks
-  const { genres, getGenreName } = useGetGenres();
-
+export function FirstItem({ ref, item, genres, isActive }: IFirstItemProps) {
   // Constants
   const baseImageUrl = "https://image.tmdb.org/t/p/w500/";
   const year = new Date(item.release_date).getFullYear();
@@ -21,6 +17,14 @@ export function FirstItem({ ref, item, isActive }: IFirstItemProps) {
   // Methods
   const handleOpenItem = (item: IMovie) => {
     window.open(`https://www.themoviedb.org/movie/${item.id}`, "_blank");
+  };
+
+  const getGenreName = (genreId: number, genreList: IMovieGenre[]) => {
+    if (!genreList || genreList.length === 0) return "";
+
+    const genre = genreList.find((g) => g.id === Number(genreId));
+
+    return genre ? genre.name : "";
   };
 
   // Renders

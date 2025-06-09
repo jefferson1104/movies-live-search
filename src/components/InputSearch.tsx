@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { FaChevronDown } from "react-icons/fa6";
 import { LuLoaderCircle } from "react-icons/lu";
 
+import { useGetGenres } from "../hooks/useGetGenres";
+
 import type { IMovie } from "../interfaces/movie";
 
 import { FirstItem } from "./FirstItem";
@@ -12,7 +14,10 @@ interface IInputSearchProps {
   value?: string;
   searchValue?: string;
   searchResults?: IMovie[];
+  currentPage: number;
+  totalPages: number;
   onSearchChange: (value: string) => void;
+  onLoadMoreResults: () => Promise<void>;
 }
 
 export function InputSearch({
@@ -20,11 +25,18 @@ export function InputSearch({
   value = "",
   searchValue = "",
   searchResults = [],
+  currentPage,
+  totalPages,
   onSearchChange,
+  onLoadMoreResults,
 }: IInputSearchProps) {
   // Hooks
+  const { genres } = useGetGenres();
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const itemRefs = useRef<(HTMLLIElement | undefined)[]>([]);
+  const isFetching = useRef(false);
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // States
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -72,6 +84,41 @@ export function InputSearch({
     }
   }, [activeIndex]);
 
+  useEffect(() => {
+    const listEl = listRef.current;
+    if (!listEl) return;
+
+    listEl.scrollTop = 0;
+  }, [searchValue]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = list;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+
+      if (!isNearBottom) return;
+      if (isFetching.current) return;
+      if (currentPage >= totalPages) return;
+
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+      debounceTimeout.current = setTimeout(async () => {
+        isFetching.current = true;
+        try {
+          await onLoadMoreResults();
+        } finally {
+          isFetching.current = false;
+        }
+      }, 300);
+    };
+
+    list.addEventListener("scroll", handleScroll);
+    return () => list.removeEventListener("scroll", handleScroll);
+  }, [currentPage, totalPages, onLoadMoreResults]);
+
   // Renders
   return (
     <div className="group" ref={wrapperRef}>
@@ -94,7 +141,10 @@ export function InputSearch({
       </div>
 
       {searchValue && (
-        <ul className="group mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <ul
+          className="group mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          ref={listRef}
+        >
           {/* Empty State */}
           {searchResults?.length === 0 && (
             <div className="flex items-center justify-center h-14">
@@ -112,6 +162,7 @@ export function InputSearch({
               <FirstItem
                 key={item.id}
                 item={item}
+                genres={genres}
                 isActive={activeIndex === index}
                 ref={(el) => {
                   itemRefs.current[index] = el ?? undefined;
